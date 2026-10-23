@@ -1,0 +1,5 @@
+import test from "node:test"; import assert from "node:assert/strict";
+import {filterRecords, filterTasks, exportRecords, waterBalanceGap} from "../fp-features.mjs";
+test("fp search/filter preserves false/0/empty",()=>{const rows=[{title:"Alpha",status:"Draft",done:false,amount:0,note:""},{title:"Beta",status:"Approved",amount:5}];assert.equal(filterRecords(rows,{q:"alpha"}).length,1);assert.equal(filterRecords(rows,{status:"Approved"}).length,1);assert.equal(filterTasks([{title:"Call",status:"OPEN",priority:"HIGH"}],{q:"call",status:"OPEN"}).length,1);});
+test("fp export csv/json",()=>{assert.ok(exportRecords([{a:0,b:false,c:""}],"csv").body.includes("0,false"));assert.equal(JSON.parse(exportRecords([{a:0}],"json").body)[0].a,0);assert.throws(()=>exportRecords([],"xml"));});
+test("fp fallback labelled aiGenerated:false offline",()=>{delete process.env.OPENROUTER_API_KEY; delete process.env.OPENAI_API_KEY; const r=waterBalanceGap([{status:"Draft",receivedAmount:0}]); assert.equal(r.aiGenerated,false); assert.equal(r.metrics.totalPrimary,0); assert.ok(r.label.includes("Deterministic fallback"));});
